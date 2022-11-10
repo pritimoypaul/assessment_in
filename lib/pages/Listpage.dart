@@ -6,13 +6,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 Future<List> fetchCountry() async {
   final response = await http.get(
-      Uri.https('vipankumar.com', '/SmartHealth/api/getCountries'),
+      Uri.parse('https://vipankumar.com/SmartHealth/api/getCountries'),
       headers: {"Accept": "application/json"});
   var convertDataToJson = jsonDecode(response.body);
-  // print(convertDataToJson['data']['countries']);
+  print(convertDataToJson['data']['countries']);
   return convertDataToJson['data']['countries'];
 }
 
@@ -24,6 +25,8 @@ class ListPage extends StatefulWidget {
 }
 
 class _ListPageState extends State<ListPage> {
+  //variables
+  var country_selected = false;
   TextEditingController _textEditingController = TextEditingController();
 
   @override
@@ -31,8 +34,7 @@ class _ListPageState extends State<ListPage> {
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Container(
-            child: Column(
+        child: Column(
           children: [
             SizedBox(
               height: 50,
@@ -77,38 +79,100 @@ class _ListPageState extends State<ListPage> {
                 ),
               ),
             ),
-            Container(
-              child: FutureBuilder(
-                  future: fetchCountry(),
-                  builder: (context, AsyncSnapshot snapshot) {
-                    if (snapshot.hasData) {
-                      print(snapshot.data);
-                      return ListView.builder(
-                        itemCount: snapshot.data.length,
-                        itemBuilder: (BuildContext context, int index) {
-                          Map country = snapshot.data[index];
-                          return ListTile(
-                            title: Text(
-                              'Search',
-                              style: GoogleFonts.montserrat(
-                                fontSize: 12,
-                                fontWeight: FontWeight.normal,
-                                color: Color(0xFF757575),
+            Stack(
+              children: [
+                Container(
+                  height: MediaQuery.of(context).size.height - 180,
+                  child: Expanded(
+                    child: FutureBuilder(
+                        future: fetchCountry(),
+                        builder: (context, AsyncSnapshot snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return Container(
+                              child: Column(
+                                children: [
+                                  SizedBox(
+                                    height: 30,
+                                  ),
+                                  CircularProgressIndicator.adaptive(),
+                                  SizedBox(
+                                    height: 30,
+                                  ),
+                                  Text("Loading Country List"),
+                                ],
                               ),
-                            ),
-                            onTap: () {
-                              Get.to(HomePage());
-                            },
-                          );
-                        },
-                      );
-                    } else {
-                      return Text("Can't fetch data");
-                    }
-                  }),
+                            );
+                          }
+                          if (snapshot.hasData) {
+                            print(snapshot.data);
+                            return ListView.builder(
+                              scrollDirection: Axis.vertical,
+                              shrinkWrap: true,
+                              addAutomaticKeepAlives: true,
+                              itemCount: snapshot.data.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                Map country = snapshot.data[index];
+                                return ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundColor: Colors.blueGrey,
+                                    child: Icon(Icons.error),
+                                  ),
+                                  title: Text(
+                                    country['country_name'],
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color(0xFF2A2A2A),
+                                    ),
+                                  ),
+                                  trailing: Text(
+                                    "(+" + country['phone_code'] + ")",
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color(0xFF2A2A2A),
+                                    ),
+                                  ),
+                                  onTap: () {
+                                    setState(() {
+                                      this.country_selected = true;
+                                      print(country_selected);
+                                    });
+                                  },
+                                );
+                              },
+                            );
+                          } else {
+                            return Text("Can't fetch data");
+                          }
+                        }),
+                  ),
+                ),
+                Visibility(
+                  visible: country_selected == true ? true : false,
+                  child: Positioned(
+                    bottom: 10,
+                    left: MediaQuery.of(context).size.width / 2 - 90,
+                    child: FloatingActionButton.extended(
+                      label: Text(
+                        "  Confirm  ",
+                        style: GoogleFonts.montserrat(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
+                      ), // <-- Text
+                      backgroundColor: Color(0xff262F3E),
+
+                      onPressed: () {},
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
-        )),
+        ),
       ),
     );
   }
