@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:assessment_in/utils/infobox.dart';
 import 'package:get/get.dart';
+import 'package:assessment_in/controller.dart';
 import 'package:assessment_in/pages/Listpage.dart';
 
 class HomePage extends StatefulWidget {
@@ -13,6 +14,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final Controller controller = Get.put(Controller());
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -116,27 +119,68 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 16,
-              ),
-              child: ListTile(
-                shape: RoundedRectangleBorder(
-                  side: BorderSide(color: Color(0xFF70707033), width: 1),
-                  borderRadius: BorderRadius.circular(5),
+            Visibility(
+              visible: controller.country_name.string == "" ? true : false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
                 ),
-                title: Text(
-                  'Search',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 12,
-                    fontWeight: FontWeight.normal,
-                    color: Color(0xFF757575),
+                child: ListTile(
+                  shape: RoundedRectangleBorder(
+                    side: BorderSide(color: Color(0xFF70707033), width: 1),
+                    borderRadius: BorderRadius.circular(5),
                   ),
+                  title: Text(
+                    'Search',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 12,
+                      fontWeight: FontWeight.normal,
+                      color: Color(0xFF757575),
+                    ),
+                  ),
+                  onTap: () {
+                    Get.to(() => ListPage());
+                  },
                 ),
-                onTap: () {
-                  Get.to(ListPage());
-                },
+              ),
+            ),
+            Visibility(
+              visible: controller.country_name.string == "" ? false : true,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 16,
+                ),
+                child: ListTile(
+                  leading: Obx(() => CircleAvatar(
+                        backgroundColor: Colors.blueGrey,
+                        foregroundImage:
+                            NetworkImage(controller.country_image.string),
+                      )),
+                  title: Obx(() => Text(
+                        controller.country_name.string +
+                            " (+" +
+                            controller.country_code.string +
+                            ")",
+                        style: GoogleFonts.montserrat(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF2A2A2A),
+                        ),
+                      )),
+                  trailing: Text(
+                    "Selected",
+                    style: GoogleFonts.montserrat(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF2A2A2A),
+                    ),
+                  ),
+                  onTap: () {
+                    Get.to(() => ListPage());
+                  },
+                ),
               ),
             ),
           ],
