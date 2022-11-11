@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:assessment_in/pages/Homepage.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -29,7 +31,46 @@ class _ListPageState extends State<ListPage> {
   //variables
   final Controller controller = Get.find();
   var country_selected = false;
+  var country_list;
   TextEditingController _textEditingController = TextEditingController();
+  String _now = "";
+  var _everySecond;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    print("initstate called");
+
+    // Update this screens state every second
+    changeStatePerSec();
+
+    // Set country list to country_list variable
+    setCountryList();
+    print(country_list);
+  }
+
+  changeStatePerSec() {
+    // sets first value
+    _now = DateTime.now().second.toString();
+
+    // defines a timer
+    _everySecond = Timer.periodic(Duration(seconds: 1), (Timer t) {
+      setState(() {
+        _now = DateTime.now().second.toString();
+      });
+    });
+  }
+
+  setCountryList() async {
+    final response = await http.get(
+        Uri.parse('https://vipankumar.com/SmartHealth/api/getCountries'),
+        headers: {"Accept": "application/json"});
+    var convertDataToJson = jsonDecode(response.body);
+    // print(convertDataToJson['data']['countries']);
+    country_list = convertDataToJson['data']['countries'];
+    print(country_list);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -122,76 +163,65 @@ class _ListPageState extends State<ListPage> {
                   height: MediaQuery.of(context).size.height -
                       (country_selected == true ? 230 : 180),
                   child: Expanded(
-                    child: FutureBuilder(
-                        future: fetchCountry(),
-                        builder: (context, AsyncSnapshot snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return Container(
-                              child: Column(
-                                children: [
-                                  SizedBox(
-                                    height: 30,
+                    child: country_list != null
+                        ? ListView.builder(
+                            scrollDirection: Axis.vertical,
+                            shrinkWrap: true,
+                            addAutomaticKeepAlives: true,
+                            itemExtent: 60,
+                            itemCount: country_list.length,
+                            itemBuilder: (BuildContext context, int index) {
+                              Map country = country_list[index];
+                              return ListTile(
+                                leading: CircleAvatar(
+                                  backgroundColor: Colors.blueGrey,
+                                  child: Icon(Icons.error),
+                                ),
+                                title: Text(
+                                  country['country_name'],
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xFF2A2A2A),
                                   ),
-                                  CircularProgressIndicator.adaptive(),
-                                  SizedBox(
-                                    height: 30,
+                                ),
+                                trailing: Text(
+                                  "(+" + country['phone_code'] + ")",
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xFF2A2A2A),
                                   ),
-                                  Text("Loading Country List"),
-                                ],
-                              ),
-                            );
-                          }
-                          if (snapshot.hasData) {
-                            // print(snapshot.data);
-                            return ListView.builder(
-                              scrollDirection: Axis.vertical,
-                              shrinkWrap: true,
-                              addAutomaticKeepAlives: true,
-                              itemExtent: 60,
-                              itemCount: snapshot.data.length,
-                              itemBuilder: (BuildContext context, int index) {
-                                Map country = snapshot.data[index];
-                                return ListTile(
-                                  leading: CircleAvatar(
-                                    backgroundColor: Colors.blueGrey,
-                                    child: Icon(Icons.error),
-                                  ),
-                                  title: Text(
-                                    country['country_name'],
-                                    style: GoogleFonts.montserrat(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xFF2A2A2A),
-                                    ),
-                                  ),
-                                  trailing: Text(
-                                    "(+" + country['phone_code'] + ")",
-                                    style: GoogleFonts.montserrat(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xFF2A2A2A),
-                                    ),
-                                  ),
-                                  onTap: () {
-                                    setState(() {
-                                      this.country_selected = true;
-                                      controller.country_name =
-                                          RxString(country['country_name']);
-                                      controller.country_code =
-                                          RxString(country['phone_code']);
-                                      controller.country_image =
-                                          RxString(country['image']);
-                                      print(country_selected);
-                                    });
-                                  },
-                                );
-                              },
-                            );
-                          } else {
-                            return Text("Can't fetch data");
-                          }
-                        }),
+                                ),
+                                onTap: () {
+                                  setState(() {
+                                    this.country_selected = true;
+                                    controller.country_name =
+                                        RxString(country['country_name']);
+                                    controller.country_code =
+                                        RxString(country['phone_code']);
+                                    controller.country_image =
+                                        RxString(country['image']);
+                                    print(country_selected);
+                                  });
+                                },
+                              );
+                            },
+                          )
+                        : Container(
+                            child: Column(
+                              children: [
+                                SizedBox(
+                                  height: 30,
+                                ),
+                                CircularProgressIndicator.adaptive(),
+                                SizedBox(
+                                  height: 30,
+                                ),
+                                Text("Loading Country List"),
+                              ],
+                            ),
+                          ),
                   ),
                 ),
                 Visibility(
