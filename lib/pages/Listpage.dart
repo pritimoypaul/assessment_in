@@ -48,6 +48,9 @@ class _ListPageState extends State<ListPage> {
     // Set country list to country_list variable
     setCountryList();
     print(country_list);
+
+    // Update country list every 10 sec
+    changeListItem();
   }
 
   changeStatePerSec() {
@@ -58,6 +61,21 @@ class _ListPageState extends State<ListPage> {
     _everySecond = Timer.periodic(Duration(seconds: 1), (Timer t) {
       setState(() {
         _now = DateTime.now().second.toString();
+      });
+    });
+  }
+
+  changeListItem() {
+    // defines a timer
+    _everySecond = Timer.periodic(Duration(seconds: 10), (Timer t) {
+      setState(() {
+        if (country_list != null) {
+          if (country_list.length != 0) {
+            country_list.removeAt(0);
+          } else {
+            setCountryList();
+          }
+        }
       });
     });
   }
@@ -164,49 +182,54 @@ class _ListPageState extends State<ListPage> {
                       (country_selected == true ? 230 : 180),
                   child: Expanded(
                     child: country_list != null
-                        ? ListView.builder(
-                            scrollDirection: Axis.vertical,
-                            shrinkWrap: true,
-                            addAutomaticKeepAlives: true,
-                            itemExtent: 60,
-                            itemCount: country_list.length,
-                            itemBuilder: (BuildContext context, int index) {
-                              Map country = country_list[index];
-                              return ListTile(
-                                leading: CircleAvatar(
-                                  backgroundColor: Colors.blueGrey,
-                                  child: Icon(Icons.error),
-                                ),
-                                title: Text(
-                                  country['country_name'],
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                    color: Color(0xFF2A2A2A),
-                                  ),
-                                ),
-                                trailing: Text(
-                                  "(+" + country['phone_code'] + ")",
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                    color: Color(0xFF2A2A2A),
-                                  ),
-                                ),
-                                onTap: () {
-                                  setState(() {
-                                    this.country_selected = true;
-                                    controller.country_name =
-                                        RxString(country['country_name']);
-                                    controller.country_code =
-                                        RxString(country['phone_code']);
-                                    controller.country_image =
-                                        RxString(country['image']);
-                                    print(country_selected);
-                                  });
-                                },
-                              );
+                        ? RefreshIndicator(
+                            onRefresh: () async {
+                              setCountryList();
                             },
+                            child: ListView.builder(
+                              scrollDirection: Axis.vertical,
+                              shrinkWrap: true,
+                              addAutomaticKeepAlives: true,
+                              itemExtent: 60,
+                              itemCount: country_list.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                Map country = country_list[index];
+                                return ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundColor: Colors.blueGrey,
+                                    child: Icon(Icons.error),
+                                  ),
+                                  title: Text(
+                                    country['country_name'],
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color(0xFF2A2A2A),
+                                    ),
+                                  ),
+                                  trailing: Text(
+                                    "(+" + country['phone_code'] + ")",
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color(0xFF2A2A2A),
+                                    ),
+                                  ),
+                                  onTap: () {
+                                    setState(() {
+                                      this.country_selected = true;
+                                      controller.country_name =
+                                          RxString(country['country_name']);
+                                      controller.country_code =
+                                          RxString(country['phone_code']);
+                                      controller.country_image =
+                                          RxString(country['image']);
+                                      print(country_selected);
+                                    });
+                                  },
+                                );
+                              },
+                            ),
                           )
                         : Container(
                             child: Column(
