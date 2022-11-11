@@ -196,6 +196,12 @@ class _ListPageState extends State<ListPage> {
                                 Map country = country_list[index];
                                 return ListTile(
                                   leading: CircleAvatar(
+                                    foregroundImage:
+                                        NetworkImage(country['image']),
+                                    onForegroundImageError:
+                                        (exception, stackTrace) {
+                                      print(exception);
+                                    },
                                     backgroundColor: Colors.blueGrey,
                                     child: Icon(Icons.error),
                                   ),
